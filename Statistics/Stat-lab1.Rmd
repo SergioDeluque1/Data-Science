@@ -1,0 +1,182 @@
+---
+title: "Laboratorio 1"
+author: "Jhon Anderson Marin Gonzalez"
+date: "2025-01-30"
+output: html_document
+---
+
+# Bloque 1
+
+Cargar archivos
+
+```{r}
+datos <- read.csv("/Users/sergiodeluquez/Downloads/BaseLaboratorio1.csv")
+```
+
+Extraer información
+
+```{r}
+str(datos)
+```
+### Problema 1. 
+
+Clasificar las variables de la base de datos entre categ´oricas y cuantitativas. Adem´as, para lasvariables categóricas definir si son nominales u ordinales, y para las cuantitativas si son discretas o continuas.
+
+En datos hay 7 variables:
+
+ - Year: Cuantitativa discreta.
+ 
+ - Country: Cualitativa nominal.
+ 
+ - SolarEnergy: Cuantitativa continua.
+ 
+ - WindEnergy: Cuantitativa continua.
+ 
+ - HydroEnergy: Cuantitativas continua.
+ 
+ - OtherRenewableEnergy: Cuantitativa continua.
+ 
+ - TotalRenewableEnergi: Cuantitativa continua.
+ 
+### Problema 2. 
+Para las variables de naturaliza cualitativa identificadas, presentar la distribución de frecuencias (absoluta y relativa) y comentar los resultados.
+
+```{r}
+datosCountry <- datos$Country
+fAbsC <- table(datosCountry)
+print(fAbsC)
+nDatosCountry <- length(datosCountry)
+fRelC <- fAbsC / nDatosCountry
+print(fRelC)
+```
+Todos los datos tienen la misma cantidad de valores en el total.
+
+### Problema 3. 
+Escoja tres países y compare los histogramas de frecuencias absolutas y relativas de las variables producción anual de energía solar, eólica y hidráulica en cada uno de ellos. Comente los resultados.
+
+Usaremos: JAPAN, GERMANY, BRASIL
+
+**Energia solar:**
+
+```{r }
+barplot(datos[datos$Country == 'Japan',]$SolarEnergy, names.arg = datos[datos$Country=='Japan',]$Year, main = 'Solar Energy', col=rgb(red= 0.9, green = 0, blue= 0, alpha = 1), ylab = "GWH", legend.text = c("Japón"), args.legend = list(x= "top", bty = "n"))
+
+barplot(datos[datos$Country == 'Germany',]$SolarEnergy, names.arg = datos[datos$Country=='Germany',]$Year, col=rgb(red = 0, green = 0 , blue = 0.5), density= 20, add = TRUE, legend.text = c("Alemania"), args.legend = list(x= "topright", bty = "n"))
+
+barplot(datos[datos$Country == 'Brazil',]$SolarEnergy, names.arg = datos[datos$Country=='Brazil',]$Year, col=rgb(red = 0, green = 1 , blue = 0.3, alpha = 0.3),  add = TRUE,  legend.text = c("Brazil"), args.legend = list(x= "topleft", bty = "n"))
+
+```
+
+**Energia eolica:**
+
+```{r }
+barplot(datos[datos$Country == 'Japan',]$WindEnergy, names.arg = datos[datos$Country=='Japan',]$Year, main = 'Wind Energy', col=rgb(red= 0.9, green = 0, blue= 0, alpha = 1), ylab = "GWH", legend.text = c("Japón"), args.legend = list(x= "top", bty = "n"))
+
+barplot(datos[datos$Country == 'Germany',]$WindEnergy, names.arg = datos[datos$Country=='Germany',]$Year, col=rgb(red = 0, green = 0 , blue = 0.5), density= 20, add = TRUE, legend.text = c("Alemania"), args.legend = list(x= "topright", bty = "n"))
+
+barplot(datos[datos$Country == 'Brazil',]$WindEnergy, names.arg = datos[datos$Country=='Brazil',]$Year, col=rgb(red = 0, green = 1 , blue = 0.3, alpha = 0.3),  add = TRUE,  legend.text = c("Brazil"), args.legend = list(x= "topleft", bty = "n"))
+
+```
+
+**Energia hidraulica:**
+
+```{r }
+barplot(datos[datos$Country == 'Japan',]$HydroEnergy, names.arg = datos[datos$Country=='Japan',]$Year, main = 'Hydro Energy', col=rgb(red= 0.9, green = 0, blue= 0, alpha = 1), ylab = "GWH", legend.text = c("Japón"), args.legend = list(x= "top", bty = "n"))
+
+barplot(datos[datos$Country == 'Germany',]$HydroEnergy, names.arg = datos[datos$Country=='Germany',]$Year, col=rgb(red = 0, green = 0 , blue = 0.5), density= 20, add = TRUE, legend.text = c("Alemania"), args.legend = list(x= "topright", bty = "n"))
+
+barplot(datos[datos$Country == 'Brazil',]$HydroEnergy, names.arg = datos[datos$Country=='Brazil',]$Year, col=rgb(red = 0, green = 1 , blue = 0.3, alpha = 0.3),  add = TRUE,  legend.text = c("Brazil"), args.legend = list(x= "topleft", bty = "n"))
+
+```
+
+### Problema 4.
+A partir de la información de la base de datos, presente un resumen de los resultados relevantes encontrados a partir de gráficos que permitan comparar información entre distintas variables. Comente los resultados.
+
+A partir de las gráficas, podemos concluir que:
+
+- El orden de mayor producción en los países seleccionados es Alemania, Japón y Brasil.
+- ⁠Se ha visto que en especial la producción de energía solar, en la Alemania ha sido bastante inestable, porque vemos que fue el que más alto tuvo el pico de energía en la gráfica y también el que tuvo el pico más bajo.
+- ⁠Aunque sean culturas distintas de occidente, centro y oriente, su producción de energía es similar, y no se puede clasificar según su región, por ser tan volátiles.
+- ⁠La energía hidráulica fue la que se mantuvo más estable y también es en la que los países tienen más similitud .
+
+# Bloque 2:
+
+### Problema 1: 
+
+1. Calcule la cantidad de clases y la amplitud de cada una para la variable Solar Energy utilizando el método de Sturges. Muestre los valores de los l ́ımites de cada clase.
+2. Grafique un histograma de frecuencias relativas de Solar Energy utilizando las clases calculadas en el punto anterior.
+3. Grafique un histograma de frecuencias relativas de Solar Energy utilizando el par ́ametro breaks=”Sturges”. Compare el histograma con el del punto anterior ¿existen diferencias? ¿por qué?
+
+#### Solución
+
+1. La regla de stuges es: $k ≈ 1 + 3log_{10}(n)$
+
+El registro de energia solar tiene 240 datos, entonces al hacer el calculo:
+
+```{r}
+#Cargar los datos de energia solar.
+datosEnergiaSolar <- datos$SolarEnergy
+
+# Cantidad de datos
+n <- length(datosEnergiaSolar);n
+
+# Cálculo redondeado
+k <- round(1 + 3.3 * log10(n));k
+
+# Ver los datos mayores y menores.
+datosEnergiaSolar <- sort(datosEnergiaSolar)
+min <- datosEnergiaSolar[1];min
+max <- datosEnergiaSolar[240];max
+
+#Calcular la amplitud
+amp <- (max - min) / k;amp
+
+# vector con los puntos finales de cada intervalo.
+breakpoints <- seq(from = min, to = max, by = amp); breakpoints
+```
+
+Las clases por lo tanto son:
+[104.5554 - 203.7130) , [203.7130 - 302.8705) , [302.8705 - 402.0280) , [402.0280 - 501.1855) , [501.1855 - 600.3431) , [600.3431 - 699.5006) , [699.5006 - 798.6581) , [798.6581 - 897.8156) , [897.8156 - 996.9732].
+
+las frecuencias relativas: 
+
+Se usó la barra de densidad que es similar, pero con dos 0 de más, se ve una tabla de las frecuencias relativas
+
+```{r}
+fAbsSolar <- hist(datosEnergiaSolar, plot = TRUE, breaks = breakpoints, right= TRUE, freq = FALSE, col = "red", main = "Energia solar en kw/h", xlab = "Energia en kw/h")$counts
+
+
+fRelSolar = fAbsSolar/n
+intervalosSol <- c("[104.5554 - 203.7130)" , "[203.7130 - 302.8705)" , "[302.8705 - 402.0280)" , "[402.0280 - 501.1855)" , "[501.1855 - 600.3431)" , "[600.3431 - 699.5006)" , "[699.5006 - 798.6581)" , "[798.6581 - 897.8156)" , "[897.8156 - 996.9732]")
+datos1 <- data.frame(intervalosSol,fRelSolar);datos1
+```
+
+3. 
+
+```{r}
+intervalosSturge <- hist(datosEnergiaSolar, plot = TRUE, breaks = "Sturges", right= TRUE, freq = FALSE, col = "red", main = "Energia solar en kw/h", xlab = "Energia en kw/h")$breaks;intervalosSturge
+```
+
+
+## Conclusiones:
+Al comparar las graficas se puede observar una discrepancia ente las ultimas dos columnas del histograma, siendo la última notoriamente mas alta (es decir, teniendo un valor mayor) en la hecha con los intervalos manualmente ("Grafica 1: Energia Solar a mano") y la penultima columna teniendo menor valor igualmente, compensando la variación en la última en donde la discrepancia de frecuencias es arrastrada; esto consecuencia de la discrepancia ente los intervalos, que como se ve en el gráfico no tiene mayor efecto en el resto de columnas
+
+Al comparar ambas graficas ("Energia solar a mano" y "Energia solar"), vemos que hay ligeras diferencias entre los intervalos, estas diferencias visualmente se notan en los dos ultimos intervalos de la grafica ("Energia solar a mano").
+
+En las graficas de energia solar de Sturges, Scott, FD y raíz; vemos que en la grafica (Energia solar en kw/h por Sturges) esta graficada diferente a los otros metodos que se usaron.
+
+En las demas graficas, excluyendo la del punto anterior, vemos que los metodos utilizados grafican de forma similar en cada punto excepto en la de raiz, que se observa que tiene mas clases.
+
+Al graficar la energía solar, el método de sturges y el de raíz presentaba una gráfica distinta a la de los demás métodos, Scott , FD. Para el resto de las energías, todos los métodos, excepto el de raíz, resultaban en histogramas iguales. Solo en la gráfica de "otras energías renovables" el método de raíz mostró la misma gráfica que los demás métodos
+
+
+
+
+
+
+
+
+
+
+
+

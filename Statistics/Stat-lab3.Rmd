@@ -1,0 +1,204 @@
+---
+title: "Entrega 2"
+authors: Samuel Villegas, Juan camilo Munera
+output: html_document
+---
+```{r}
+install.packages("readxl")
+install.packages("dplyr")
+```
+
+```{r}
+# cargar librerias
+library(readxl)
+library(dplyr)
+# Leer el archivo
+data_fem <- read_excel("/Users/sergiodeluquez/Downloads/Base_Proyecto_Cepal.xlsx", sheet = 'Índice_Feminidad')
+data_ip <- read_excel('Base_Proyecto_Cepal.xlsx', sheet = 'Porcentaje_Población_Sin_IP')
+# Ver estructura de los datos
+str(data_fem)
+summary(data_fem)
+str(data_ip)
+summary(data_ip)
+
+```
+
+## problema 1
+De las base de datos de trabajo asociadas con la informaci´on de CEPAL,
+plantee hip´otesis asociadas a las variables de naturaleza cualitativa y cuantitativa que sean
+de su inter´es contrastar en t´erminos del focus presentado en la entrega 1. En el planteamiento
+de las hip´otesis tener en cuenta:
+
++ Que involucren a la media de una poblaci´on, µ; para las variables de naturaleza cuan-
+titativa.
++ Que involucren a una proporci´on poblacional, p; para variables de naturaleza cualita-
+tiva.
++ Que involucre una diferencia de dos medias poblacionales µ1− µ2; y una diferencia de
+proporciones poblacionales p1− p2.
+
+### hipótesis
+La proporción de mujeres en situación de pobreza y pobreza extrema en zonas rurales (p₁) es significativamente mayor que la proporción de mujeres en situación de pobreza y pobreza extrema en zonas urbanas (p₂), lo que implica que existe una diferencia positiva entre ambas proporciones (p₁ − p₂ > 0), lo que sugiere una mayor concentración relativa de mujeres afectadas por condiciones de vulnerabilidad económica en contextos rurales.
+
+### hipótesis nula (H₀):
+La media del ingreso de las mujeres en zonas rurales es igual a la media del ingreso de las mujeres en zonas urbanas. Es decir, no hay diferencia significativa entre los ingresos promedio de las mujeres rurales y urbanas.
+
+### hipótesis alternativa (H₁):
+La media del ingreso de las mujeres en zonas rurales es diferente a la media del ingreso de las mujeres en zonas urbanas. Es decir, existe una diferencia significativa entre los ingresos promedio de las mujeres rurales y urbanas.
+```{r}
+# cargar variables
+país <- data_fem$País
+Años <- data_fem$Años
+Pobreza_cat <- data_fem$Pobreza_Extrema_Pobreza
+Area_Geo<- data_fem$Área_Geografica
+Indice_fem <- data_fem$Índice_Feminidad
+
+# Filtrar solo los datos de pobreza o pobreza extrema
+data_filtrada <- data_fem %>%
+  filter(Pobreza_Extrema_Pobreza %in% c("Pobreza", "Pobreza Extrema"))
+
+# Calcular proporción de mujeres en pobreza por zona geográfica
+proporciones_por_area <- data_filtrada %>%
+  group_by(`Área_Geografica`) %>%
+  summarise(
+    total_mujeres_pobres = n(),
+    total_mujeres = nrow(data_fem[data_fem$`Área_Geografica` == unique(`Área_Geografica`), ]),
+    proporcion = total_mujeres_pobres / total_mujeres
+  )
+
+# Ver resultados
+print(proporciones_por_area)
+
+# Ver los nombres de las columnas
+colnames(data_fem)
+
+```
+
+
+## Problema 2. 
+
+Para las variables seleccionadas de la base de datos, extraer una muestra
+aleatoria de tama˜no n= 25.
+
+```{r}
+# Crear muestra de tamaño n = 25
+set.seed(123)
+muestra_df <- data.frame(
+  País = sample(data_fem$País, 25),
+  Año = sample(data_fem$Años, 25, replace = TRUE),
+  Pobreza_cat = sample(data_fem$Pobreza_Extrema_Pobreza, 25, replace = TRUE),
+  Area_Geo = sample(data_fem$Área_Geografica, 25, replace = TRUE),
+  Indice_fem = sample(data_fem$Índice_Feminidad, 25, replace = TRUE)
+)
+```
+ 
+## Problema 3. 
+Para cada uno de los par´ametros de inter´es planteados en el problema 1
+(sobre los cuales plante´o hip´otesis), construya un intervalo emp´ırico e interprete el resultado
+obtenido. (Solo aplica para variables de naturaleza cuantitativa)
+
+estimación de intervalos mediante simulación con el método bootstrap
+```{r}
+library(boot)
+
+# Crear función para obtener la media del índice de feminidad
+media_boot <- function(data, indices) {
+  d <- data[indices]
+  return(mean(d, na.rm = TRUE))
+}
+
+# Aplicar bootstrap
+set.seed(123)
+bootstrap_result <- boot(data = muestra_df$Indice_fem, statistic = media_boot, R = 1000)
+
+# Intervalo de confianza del 95% (percentil)
+boot.ci(bootstrap_result, type = "perc")
+
+```
+Todos los datos tienen la misma cantidad de valores en el total.
+
+### Problema 4.
+Para cada uno de los par´ametros de inter´es planteados en el problema 1
+(sobre los cuales plante´o hip´otesis) construya un intervalo del confianza al 95 % e interprete
+el resultado obtenido.
+
+```{r }
+# Filtrar datos por zona y obtener el índice de feminidad
+rural <- data_fem %>% filter(Área_Geografica == "Rural") %>% pull(Índice_Feminidad)
+urbana <- data_fem %>% filter(Área_Geografica == "Urbana") %>% pull(Índice_Feminidad)
+
+# Realizar la prueba t para la diferencia de medias y obtener el intervalo de confianza
+t_test_result <- t.test(rural, urbana, alternative = "two.sided", conf.level = 0.95)
+
+# Ver resultados del intervalo de confianza
+t_test_result$conf.int
+
+# Crear variables con la cantidad de mujeres en pobreza en cada zona
+pobreza_rural <- data_fem %>% filter(Área_Geografica == "Rural", Pobreza_Extrema_Pobreza %in% c("Pobreza", "Pobreza Extrema")) %>% nrow()
+total_rural <- data_fem %>% filter(Área_Geografica == "Rural") %>% nrow()
+pobreza_urbana <- data_fem %>% filter(Área_Geografica == "Urbana", Pobreza_Extrema_Pobreza %in% c("Pobreza", "Pobreza Extrema")) %>% nrow()
+total_urbana <- data_fem %>% filter(Área_Geografica == "Urbana") %>% nrow()
+
+# Calcular proporciones de mujeres en pobreza en cada zona
+p_rural <- pobreza_rural / total_rural
+p_urbana <- pobreza_urbana / total_urbana
+
+# Calcular la diferencia de proporciones
+p_diff <- p_rural - p_urbana
+
+# Calcular el intervalo de confianza para la diferencia de proporciones
+z <- qnorm(0.975)  # Valor crítico para un intervalo de confianza del 95%
+se <- sqrt((p_rural * (1 - p_rural) / total_rural) + (p_urbana * (1 - p_urbana) / total_urbana))
+ci_lower <- p_diff - z * se
+ci_upper <- p_diff + z * se
+
+# Mostrar el intervalo de confianza
+cat("Intervalo de confianza para la diferencia de proporciones (p_rural - p_urbana):", ci_lower, "a", ci_upper, "\n")
+
+```
+
+### Problema 5.
+Para cada uno de los par´ametros de inter´es definidos en el problema 1 plantee
+un contraste de hip´otesis, usando un nivel de significancia del 5 % e interprete el resultado
+obtenido.
+ Contraste de hipótesis para la diferencia de proporciones (Pobreza entre zonas rurales y urbanas)
+Ahora, para contrastar la diferencia de proporciones de mujeres en pobreza entre zonas rurales y urbanas, usaremos una prueba de diferencia de proporciones.
+
+Primero, vamos a calcular las proporciones de mujeres en pobreza en las zonas rurales y urbanas. Después, aplicamos una prueba z para la diferencia de proporciones.
+```{r}
+# Filtrar datos por zona y obtener el índice de feminidad
+rural <- data_fem %>% filter(Área_Geografica == "Rural") %>% pull(Índice_Feminidad)
+urbana <- data_fem %>% filter(Área_Geografica == "Urbana") %>% pull(Índice_Feminidad)
+
+# Realizar la prueba t
+t_test_result <- t.test(rural, urbana, alternative = "two.sided", conf.level = 0.95)
+
+# Ver resultados
+t_test_result
+
+# Crear variables con la cantidad de mujeres en pobreza en cada zona
+pobreza_rural <- data_fem %>% filter(Área_Geografica == "Rural", Pobreza_Extrema_Pobreza %in% c("Pobreza", "Pobreza Extrema")) %>% nrow()
+total_rural <- data_fem %>% filter(Área_Geografica == "Rural") %>% nrow()
+pobreza_urbana <- data_fem %>% filter(Área_Geografica == "Urbana", Pobreza_Extrema_Pobreza %in% c("Pobreza", "Pobreza Extrema")) %>% nrow()
+total_urbana <- data_fem %>% filter(Área_Geografica == "Urbana") %>% nrow()
+
+# Calcular proporciones de mujeres en pobreza en cada zona
+p_rural <- pobreza_rural / total_rural
+p_urbana <- pobreza_urbana / total_urbana
+
+# Diferencia de proporciones
+p_diff <- p_rural - p_urbana
+
+# Prueba Z para la diferencia de proporciones
+z_score <- (p_rural - p_urbana) / sqrt((p_rural * (1 - p_rural) / total_rural) + (p_urbana * (1 - p_urbana) / total_urbana))
+
+# Valor p (usando distribución normal estándar)
+p_value <- 2 * (1 - pnorm(abs(z_score)))
+
+# Mostrar resultados
+cat("Valor p para la diferencia de proporciones: ", p_value, "\n")
+
+```
+dado esto, podemos concluír que, dado que el valor p = 0.9715899 es mayor que 0.05 (nivel de significancia comúnmente usado), no podemos rechazar la hipótesis nula (H₀).
+
+## Conclusión
+Con un nivel de significancia del 5%, no hay evidencia suficiente para afirmar que exista una diferencia significativa entre los ingresos promedio de las mujeres en zonas rurales y urbanas. Esto sugiere que, en este caso, los ingresos promedio de las mujeres en zonas rurales y urbanas son similares
